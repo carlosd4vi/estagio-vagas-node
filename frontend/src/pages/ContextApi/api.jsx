@@ -27,7 +27,7 @@ export function Api({ children }) {
       const paginaParaBuscar = resetar ? 0 : pagina + 1;
       
       // O encodeURIComponent é para a URL não quebrar se o usuário digitar espaços ou acentos!
-      const url = `http://localhost:3000/api/vagas?ordem=${ordem}&page=${paginaParaBuscar}&busca=${encodeURIComponent(termoBusca)}`;
+      const url = `https://estagio-vagas-node.onrender.com/api/vagas?ordem=${ordem}&page=${paginaParaBuscar}&busca=${encodeURIComponent(termoBusca)}`;
       
       const response = await fetch(url, { cache: 'no-store' });
       const data = await response.json();
