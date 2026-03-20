@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useRef } from 'react';
 
 export const ContextApi = createContext();
 
@@ -8,29 +8,48 @@ export function Api({ children }) {
   
   const [pagina, setPagina] = useState(0);
   const [cliquesBotao, setCliquesBotao] = useState(0);
-  
-  // Nossas duas memórias vitais: a Ordem e a Busca
   const [ordemAtual, setOrdemAtual] = useState('recent');
   const [buscaAtual, setBuscaAtual] = useState(''); 
 
-  // Adicionamos a termoBusca na função. Se não passarem nada, ela lembra da busca anterior.
+  // 1. CRIAMOS A GAVETA SECRETA DE CACHE
+  // Ela vai guardar as coisas no formato: { "url_buscada": [array_de_vagas] }
+  const cacheVagas = useRef({});
+
   const buscarVagas = async (ordem = ordemAtual, resetar = true, termoBusca = buscaAtual) => {
     if (resetar) {
       setLoading(true);
       setPagina(0); 
       setCliquesBotao(0); 
       setOrdemAtual(ordem);
-      setBuscaAtual(termoBusca); // Salva o que o cara digitou na memória global
+      setBuscaAtual(termoBusca);
     }
 
     try {
       const paginaParaBuscar = resetar ? 0 : pagina + 1;
+      const url = `http://localhost:3000/api/vagas?ordem=${ordem}&page=${paginaParaBuscar}&busca=${encodeURIComponent(termoBusca)}`;
       
-      // O encodeURIComponent é para a URL não quebrar se o usuário digitar espaços ou acentos!
-      const url = `https://estagio-vagas-node.onrender.com/api/vagas?ordem=${ordem}&page=${paginaParaBuscar}&busca=${encodeURIComponent(termoBusca)}`;
-      
-      const response = await fetch(url, { cache: 'no-store' });
+      // 2. O GUARDA DE TRÂNSITO DO CACHE
+      if (cacheVagas.current[url]) {
+        // Se já temos o resultado exato dessa URL guardado na gaveta...
+        if (resetar) {
+          setVagas(cacheVagas.current[url]);
+        } else {
+          setVagas((vagasAntigas) => [...vagasAntigas, ...cacheVagas.current[url]]);
+          setPagina(paginaParaBuscar);
+        }
+        
+        // Tiramos o loading e CANCELAMOS a execução da função aqui mesmo com o 'return'
+        if (resetar) setLoading(false);
+        return; 
+      }
+
+      // 3. SE NÃO TEM NO CACHE, VAMOS NA API
+      // (Podemos tirar o { cache: 'no-store' } daqui, pois nós mesmos estamos controlando isso agora)
+      const response = await fetch(url);
       const data = await response.json();
+      
+      // 4. SALVAMOS O RESULTADO NA GAVETA PARA A PRÓXIMA VEZ!
+      cacheVagas.current[url] = data;
       
       if (resetar) {
         setVagas(data);
@@ -48,7 +67,6 @@ export function Api({ children }) {
   const carregarMaisVagas = async () => {
     if (cliquesBotao < 5) { 
       setCliquesBotao((prev) => prev + 1);
-      // O botão "carregar mais" usa as memórias que guardamos:
       await buscarVagas(ordemAtual, false, buscaAtual); 
     }
   };
@@ -58,7 +76,6 @@ export function Api({ children }) {
   }, []); 
 
   return (
-    // Exportamos a 'ordemAtual' para o componente de Busca saber como ordenar
     <ContextApi.Provider value={{ vagas, loading, buscarVagas, carregarMaisVagas, cliquesBotao, ordemAtual }}>
       {children}
     </ContextApi.Provider>

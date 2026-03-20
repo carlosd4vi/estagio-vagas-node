@@ -47,6 +47,25 @@ export default function Card({
   return dataVaga.toLocaleDateString('pt-BR');
 }
 
+// 3. A NOVA Função que descobre a plataforma baseada no link
+  const identificarPlataforma = (linkVaga) => {
+    if (!linkVaga) return 'site';
+    const url = linkVaga.toLowerCase();
+    
+    if (url.includes('gupy.io')) return 'gupy';
+    if (url.includes('indeed.com')) return 'indeed';
+    if (url.includes('linkedin.com')) return 'linkedin';
+    if (url.includes('infojobs.com.br')) return 'infojobs';
+    if (url.includes('catho.com.br')) return 'catho';
+    
+    return 'site';
+  };
+
+  // 4. Executamos a função para descobrir qual logo carregar!
+  const plataforma = identificarPlataforma(link);
+
+  const icone_calculado = modelo.toLowerCase() === 'presencial' ? 'apartment' : 'computer';
+
   return (
     <a 
       href={`${link}`} 
@@ -61,7 +80,7 @@ export default function Card({
         <div className="flex items-center gap-3">
           <img 
             className="size-12 rounded-lg object-cover bg-gray-50" 
-            src={`img/${nome_site}.jpg`} 
+            src={`src/assets/img/${plataforma}.jpg`} 
             alt={`Logo da vaga ${titulo}`}
           />
           <div>
@@ -79,7 +98,7 @@ export default function Card({
         </span>
 
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-green-50 dark:bg-green-900/30 text-xs font-medium text-green-600 dark:text-green-300">
-          <span className="material-symbols-outlined text-[14px]">{icone_modelo}</span>
+          <span className="material-symbols-outlined text-[14px]">{icone_calculado}</span>
           {modelo}
         </span>
 
