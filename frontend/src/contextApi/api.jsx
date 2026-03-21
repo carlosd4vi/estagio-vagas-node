@@ -26,8 +26,7 @@ export function Api({ children }) {
 
     try {
       const paginaParaBuscar = resetar ? 0 : pagina + 1;
-      //const url = `http://localhost:3000/api/vagas?ordem=${ordem}&page=${paginaParaBuscar}&busca=${encodeURIComponent(termoBusca)}`;
-      // const url = `https://estagio-vagas-node.onrender.com`
+      const url = `https://estagio-vagas-node.onrender.com/api/vagas?ordem=${ordem}&page=${paginaParaBuscar}&busca=${encodeURIComponent(termoBusca)}`;
       
       // 2. O GUARDA DE TRÂNSITO DO CACHE
       if (cacheVagas.current[url]) {
