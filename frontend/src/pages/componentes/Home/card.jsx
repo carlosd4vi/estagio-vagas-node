@@ -80,7 +80,7 @@ export default function Card({
         <div className="flex items-center gap-3">
           <img 
             className="size-12 rounded-lg object-cover bg-gray-50" 
-            src={`src/assets/img/${plataforma}.jpg`} 
+            src={`../../../assets/img/${plataforma}.jpg`} 
             alt={`Logo da vaga ${titulo}`}
           />
           <div>
