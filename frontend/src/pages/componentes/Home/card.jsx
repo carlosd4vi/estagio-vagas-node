@@ -12,7 +12,7 @@ export default function Card({
   {/* Função que avisa a API que alguém clicou! */}
 
   const registrarClique = () => {
-    fetch(`http://localhost:3000/api/vagas/${id}/clique`, {
+    fetch(`https://estagio-vagas-node.onrender.com/api/vagas/${id}/clique`, {
       method: 'POST'
     }).catch(err => console.error("Erro ao computar clique:", err));
   };
