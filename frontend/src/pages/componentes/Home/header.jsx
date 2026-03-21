@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import Logo from "../../assets/img/logo.jpg";
+import Logo from "../../../assets/img/logo.jpg";
 
 const Header = () => {
     return ( 
@@ -13,9 +13,9 @@ const Header = () => {
 <h1 class="text-[#111718] dark:text-white text-xl font-bold tracking-tight">Estágio Fortaleza</h1>
 </div>
 <div class="flex items-center gap-4">
-<a href="restrito/login.php" class="flex items-center justify-center rounded-lg h-10 px-6 bg-primary hover:bg-primary/80 text-white text-sm font-bold shadow-lg shadow-teal-500/20 transition-all transform active:scale-95">
+ <Link to="/login" class="flex items-center justify-center rounded-lg h-10 px-6 bg-primary hover:bg-primary/80 text-white text-sm font-bold shadow-lg shadow-teal-500/20 transition-all transform active:scale-95">
                         Entrar
-</a>
+</Link>
 </div>
 </div>
 </div>

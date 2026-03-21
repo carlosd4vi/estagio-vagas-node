@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { ContextApi } from '../ContextApi/api'; // Ajuste o caminho!
+import { ContextApi } from '../contextApi/api'; // Ajuste o caminho!
 
 const LoadingMore = () => {
   const { carregarMaisVagas, cliquesBotao } = useContext(ContextApi);

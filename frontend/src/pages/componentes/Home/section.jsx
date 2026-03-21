@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { ContextApi } from '../ContextApi/api'; // Verifique se o caminho está correto!
+import { ContextApi } from '../../../contextApi/api'; // Verifique se o caminho está correto!
 
 const Section = () => {
   const { buscarVagas, ordemAtual } = useContext(ContextApi);

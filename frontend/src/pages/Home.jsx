@@ -1,13 +1,13 @@
 import React, { useContext } from 'react';
-import { ContextApi } from "../pages/ContextApi/api"
+import { ContextApi } from "../contextApi/api"
 
-import Header from "../pages/componentes/header"
-import Section from "../pages/componentes/section"
-import Alert from "../pages/componentes/modal-alert"
-import Filtro from "./controller/filter"
-import Card from "../pages/componentes/card"
-import LoadingMore from "./controller/loading-more"
-import Footer from "../pages/componentes/footer"
+import Header from "../pages/componentes/Home/header"
+import Section from "../pages/componentes/Home/section"
+import Alert from "../pages/componentes/Home/modal-alert"
+import Filtro from "../controller/filter"
+import Card from "../pages/componentes/Home/card"
+import LoadingMore from "../controller/loading-more"
+import Footer from "../pages/componentes/Home/footer"
 
 const Home = () => {
   const { vagas, loading } = useContext(ContextApi);

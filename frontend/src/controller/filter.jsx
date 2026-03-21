@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { ContextApi } from '../ContextApi/api'; 
+import { ContextApi } from '../contextApi/api'; 
 
 const Filter = () => {
   // 1. Em vez de puxar as vagas para ordenar na mão, puxamos a função de busca!
