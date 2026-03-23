@@ -17,11 +17,14 @@ export default function Card({
 }) {
 
   // Função que avisa a API que alguém clicou!
-  const registrarClique = () => {
-    fetch(`https://estagio-vagas-node.onrender.com/api/vagas/${id}/clique`, {
-      method: 'POST'
-    }).catch(err => console.error("Erro ao computar clique:", err));
-  };
+const registrarClique = () => {
+  fetch(`https://estagio-vagas-node.onrender.com/api/vagas/${id}/clique`, {
+    method: 'POST',
+    headers: {
+      'x-api-key': 'Mdm@estagiohSPx67Qop'
+    }
+  }).catch(err => console.error("Erro ao computar clique:", err));
+};
 
   // Função que Converte a Data
   function formatarTempoDecorrido(dataBanco) {

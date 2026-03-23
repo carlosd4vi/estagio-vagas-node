@@ -45,8 +45,13 @@ export function Api({ children }) {
 
       // 3. SE NÃO TEM NO CACHE, VAMOS NA API
       // (Podemos tirar o { cache: 'no-store' } daqui, pois nós mesmos estamos controlando isso agora)
-      const response = await fetch(url);
-      const data = await response.json();
+      // 3. SE NÃO TEM NO CACHE, VAMOS NA API (Agora mostrando o crachá VIP!)
+     const response = await fetch(url, {
+  headers: {
+    'x-api-key': 'Mdm@estagiohSPx67Qop' // Exatamente a mesma chave que colocamos no Node!
+  }
+});
+const data = await response.json();
       
       // 4. SALVAMOS O RESULTADO NA GAVETA PARA A PRÓXIMA VEZ!
       cacheVagas.current[url] = data;
