@@ -19,8 +19,6 @@ const Editar = () => {
         navigate('/login');
         return;
       }
-      
-      // Se tá logado, busca as vagas do banco
       buscarVagas();
     };
     
@@ -33,7 +31,6 @@ const Editar = () => {
     try {
       let query = supabase.from('vagas_info').select('*').order('id', { ascending: false }).limit(9);
       
-      // Se digitou algo, filtra pelo título
       if (termo) {
         query = query.ilike('titulo', `%${termo}%`);
       }
@@ -48,26 +45,21 @@ const Editar = () => {
     }
   };
 
-  // 3. Dispara a busca quando clica no botão ou dá Enter
   const handlePesquisar = (e) => {
     e.preventDefault();
     buscarVagas(busca.trim());
   };
 
-  // 4. A MÁGICA DE EDITAR: Vai pro Dashboard levando a "bagagem"
   const handleIrParaEditar = (vaga) => {
-    // Usamos o 'state' do navigate para passar a vaga inteira de forma invisível
     navigate('/dashboard', { state: { vagaParaEditar: vaga } });
   };
 
-  // 5. Função de Excluir
   const handleExcluir = async (id, titulo) => {
     if (window.confirm(`Tem certeza que deseja excluir a vaga:\n"${titulo}"?`)) {
       try {
         const { error } = await supabase.from('vagas_info').delete().eq('id', id);
         if (error) throw error;
         
-        // Remove da tela sem precisar recarregar o banco todo
         setVagas(vagas.filter(v => v.id !== id));
         alert("Vaga excluída com sucesso.");
       } catch (error) {
@@ -77,12 +69,58 @@ const Editar = () => {
     }
   };
 
+  // 🌟 NOVA FUNÇÃO: Limpeza Inteligente de Vagas Antigas
+  const handleLimparAntigas = async () => {
+    const hoje = new Date();
+    
+    // Calcula 15 dias atrás
+    const data15DiasAtras = new Date();
+    data15DiasAtras.setDate(hoje.getDate() - 15);
+
+    // Calcula o 1º dia do mês atual
+    const inicioMesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+
+    // A data de corte é a MENOR entre as duas (Garante que nunca vai apagar do mês atual)
+    const dataCorte = data15DiasAtras < inicioMesAtual ? data15DiasAtras : inicioMesAtual;
+
+    const dataFormatada = dataCorte.toLocaleDateString('pt-BR');
+
+    const confirmacao = window.confirm(
+      `⚠️ ATENÇÃO: Limpeza Automática\n\nIsso apagará todas as vagas anteriores a ${dataFormatada}.\nVagas do mês atual não serão afetadas.\n\nDeseja continuar?`
+    );
+
+    if (!confirmacao) return;
+
+    try {
+      setLoading(true);
+      
+      // Comando mágico: Apaga todas onde a coluna 'dia' é menor que a data de corte
+      const { count, error } = await supabase
+        .from('vagas_info')
+        .delete({ count: 'exact' }) // Pede pro Supabase contar quantas foram apagadas
+        .lt('dia', dataCorte.toISOString());
+
+      if (error) throw error;
+
+      alert(`✅ Limpeza concluída! ${count || 0} vagas antigas foram excluídas.`);
+      
+      // Recarrega a tela para sumir com os cards apagados
+      buscarVagas();
+      
+    } catch (error) {
+      console.error("Erro ao limpar vagas antigas:", error.message);
+      alert("Erro ao realizar a limpeza.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
     <Header />
     <main className="flex-grow flex flex-col items-center justify-start pt-10 pb-20 px-4 sm:px-6">
       
-      {/* Abas de Navegação - EDITAR está vermelha/ativa agora */}
+      {/* Abas de Navegação */}
       <div className="w-full max-w-2xl mb-6">
         <nav aria-label="Tabs" className="flex space-x-1 rounded-xl bg-gray-100 dark:bg-gray-800 p-1 shadow-inner">
           <Link 
@@ -102,9 +140,22 @@ const Editar = () => {
         </nav>
       </div>
 
-      {/* Título e Barra de Busca */}
+      {/* Título, Botão de Limpeza e Barra de Busca */}
       <div className="w-full max-w-2xl mb-8">
-        <h2 className="text-2xl font-extrabold text-text-main dark:text-white mb-4">Gerenciar Vagas</h2>
+        
+        {/* Cabecalho com o novo botão */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+          <h2 className="text-2xl font-extrabold text-text-main dark:text-white">Gerenciar Vagas</h2>
+          
+          <button 
+            onClick={handleLimparAntigas}
+            type="button"
+            className="flex items-center gap-1.5 px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/40 font-bold rounded-lg transition-colors text-sm shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[18px]">delete_sweep</span>
+            Limpar Antigas
+          </button>
+        </div>
         
         <form onSubmit={handlePesquisar} className="flex gap-2">
           <div className="relative flex-1">
@@ -116,7 +167,7 @@ const Editar = () => {
               value={busca}
               onChange={(e) => {
                 setBusca(e.target.value);
-                if(e.target.value === '') buscarVagas(''); // Se apagar tudo, traz todas
+                if(e.target.value === '') buscarVagas('');
               }}
               placeholder="Buscar pelo título da vaga..." 
               className="block w-full pl-10 pr-4 py-3 rounded-lg border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-text-main dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm outline-none"
@@ -156,15 +207,22 @@ const Editar = () => {
                     <span className="material-symbols-outlined text-[16px]">visibility</span> {vaga.cliques || 0} cliques
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[16px]">schedule</span> {vaga.dia}
-                  </span>
+                    <span className="material-symbols-outlined text-[16px]">schedule</span> 
+                    {(() => {
+                      const data = new Date(vaga.dia);
+                      const dataFormatada = data.toLocaleDateString('pt-BR');
+                      // padStart(2, '0') garante que "9 horas" fique "09", e "5 minutos" fique "05"
+                      const horas = String(data.getHours()).padStart(2, '0');
+                      const minutos = String(data.getMinutes()).padStart(2, '0');
+                      return `${dataFormatada} - ${horas}h${minutos}m`;
+                      })()}
+                      </span>
                 </div>
               </div>
               
               {/* Botões de Ação */}
               <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 border-t sm:border-t-0 border-border-light dark:border-border-dark pt-4 sm:pt-0">
                 
-                {/* Botão de Editar */}
                 <button 
                   onClick={() => handleIrParaEditar(vaga)}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
@@ -173,7 +231,6 @@ const Editar = () => {
                   <span className="sm:hidden">Editar</span>
                 </button>
                 
-                {/* Botão de Excluir */}
                 <button 
                   onClick={() => handleExcluir(vaga.id, vaga.titulo)}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition-colors"
