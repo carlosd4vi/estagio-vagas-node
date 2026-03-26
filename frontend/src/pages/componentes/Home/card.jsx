@@ -5,6 +5,7 @@ import indeedLogo from "../../../assets/img/indeed.jpg";
 import linkedinLogo from "../../../assets/img/linkedin.jpg";
 import infojobsLogo from "../../../assets/img/infojobs.jpg";
 import cathoLogo from "../../../assets/img/catho.jpg";
+import solidesLogo from "../../../assets/img/solides.jpg";
 import siteLogo from "../../../assets/img/site.jpg";
 
 export default function Card({ 
@@ -57,6 +58,7 @@ const registrarClique = () => {
     if (url.includes('linkedin.com')) return linkedinLogo;
     if (url.includes('infojobs.com.br')) return infojobsLogo;
     if (url.includes('catho.com.br')) return cathoLogo;
+    if (url.includes('vagas.solides.com.br')) return solidesLogo;
     
     return siteLogo;
   };
