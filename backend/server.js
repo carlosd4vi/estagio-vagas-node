@@ -95,7 +95,10 @@ app.get('/api/vagas', verificarApiKey, async (req, res) => {
     }
 
     if (ordem === 'most_viewed') {
-      query = query.order('cliques', { ascending: false, nullsFirst: false });
+      // Adicionamos um SEGUNDO .order() com o 'id' para ser o critério de desempate!
+      query = query
+        .order('cliques', { ascending: false, nullsFirst: false })
+        .order('id', { ascending: false });
     } else {
       query = query.order('id', { ascending: false });
     }

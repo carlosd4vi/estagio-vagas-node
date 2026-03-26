@@ -23,43 +23,47 @@ export function Api({ children }) {
       setOrdemAtual(ordem);
       setBuscaAtual(termoBusca);
     }
-
     try {
       const paginaParaBuscar = resetar ? 0 : pagina + 1;
       const url = `https://estagio-vagas-node.onrender.com/api/vagas?ordem=${ordem}&page=${paginaParaBuscar}&busca=${encodeURIComponent(termoBusca)}`;
       
       // 2. O GUARDA DE TRÂNSITO DO CACHE
       if (cacheVagas.current[url]) {
-        // Se já temos o resultado exato dessa URL guardado na gaveta...
         if (resetar) {
           setVagas(cacheVagas.current[url]);
         } else {
-          setVagas((vagasAntigas) => [...vagasAntigas, ...cacheVagas.current[url]]);
+          // ✨ FILTRO ANTI-DUPLICATAS NO CACHE
+          setVagas((vagasAntigas) => {
+            const novas = cacheVagas.current[url].filter(vNova => 
+              !vagasAntigas.some(vAntiga => vAntiga.id === vNova.id)
+            );
+            return [...vagasAntigas, ...novas];
+          });
           setPagina(paginaParaBuscar);
         }
-        
-        // Tiramos o loading e CANCELAMOS a execução da função aqui mesmo com o 'return'
         if (resetar) setLoading(false);
         return; 
       }
 
       // 3. SE NÃO TEM NO CACHE, VAMOS NA API
-      // (Podemos tirar o { cache: 'no-store' } daqui, pois nós mesmos estamos controlando isso agora)
-      // 3. SE NÃO TEM NO CACHE, VAMOS NA API (Agora mostrando o crachá VIP!)
-     const response = await fetch(url, {
-  headers: {
-    'x-api-key': 'Mdm@estagiohSPx67Qop' // Exatamente a mesma chave que colocamos no Node!
-  }
-});
-const data = await response.json();
+      const response = await fetch(url, {
+        headers: { 'x-api-key': 'Mdm@estagiohSPx67Qop' }
+      });
+      const data = await response.json();
       
-      // 4. SALVAMOS O RESULTADO NA GAVETA PARA A PRÓXIMA VEZ!
+      // 4. SALVAMOS O RESULTADO NA GAVETA
       cacheVagas.current[url] = data;
       
       if (resetar) {
         setVagas(data);
       } else {
-        setVagas((vagasAntigas) => [...vagasAntigas, ...data]); 
+        // ✨ FILTRO ANTI-DUPLICATAS NA API
+        setVagas((vagasAntigas) => {
+          const novas = data.filter(vNova => 
+            !vagasAntigas.some(vAntiga => vAntiga.id === vNova.id)
+          );
+          return [...vagasAntigas, ...novas];
+        }); 
         setPagina(paginaParaBuscar);
       }
     } catch (error) {
