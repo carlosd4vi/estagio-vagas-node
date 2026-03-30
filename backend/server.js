@@ -39,6 +39,11 @@ const limitadorCliques = rateLimit({
   message: { erro: 'Muitos cliques.' }
 });
 
+// Rota Raiz: Apenas para dar "Oi" para o UptimeRobot e curiosos
+app.get('/', (req, res) => {
+  res.status(200).send('API do Estágio Fortaleza operando 100%! 🚀');
+});
+
 // Aplica o limitador geral em todas as rotas que começam com /api
 app.use('/api', limitadorGeral);
 
