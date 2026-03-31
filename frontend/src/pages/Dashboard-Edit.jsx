@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-// IMPORTANTE: Ajuste este caminho para o local onde você configurou o Supabase!
 import { supabase } from '../script/supabase';
 
 import Header from "../pages/componentes/Dashboard/header";
 
+// 🌟 1. A NOSSA SUPER GAVETA DE CACHE (Fora do componente)
+// Ela vai guardar dados assim: { "": [todas as vagas], "react": [vagas de react] }
+let cacheVagasAdmin = {};
+let ultimaBuscaAdmin = ''; // Lembra o que estava escrito no input!
+
 const Editar = () => {
   const navigate = useNavigate();
-  const [vagas, setVagas] = useState([]);
-  const [busca, setBusca] = useState('');
-  const [loading, setLoading] = useState(true);
+  
+  // 2. Os states já iniciam puxando da memória global!
+  const [busca, setBusca] = useState(ultimaBuscaAdmin);
+  const [vagas, setVagas] = useState(cacheVagasAdmin[ultimaBuscaAdmin] || []);
+  const [loading, setLoading] = useState(!cacheVagasAdmin[ultimaBuscaAdmin]);
 
-  // 1. Segurança da Porta e Busca das Vagas Iniciais
+  // Segurança da Porta e Busca Inicial
   useEffect(() => {
     const verificarAcessoEBuscar = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -19,24 +25,41 @@ const Editar = () => {
         navigate('/login');
         return;
       }
-      buscarVagas();
+      
+      // Só vai no banco se a gaveta da busca atual estiver vazia
+      if (!cacheVagasAdmin[ultimaBuscaAdmin]) {
+        buscarVagas(ultimaBuscaAdmin);
+      }
     };
     
     verificarAcessoEBuscar();
   }, [navigate]);
 
-  // 2. Função que busca as vagas no Supabase
+  // 3. Função de Busca SUPER Inteligente
   const buscarVagas = async (termo = '') => {
+    const termoTratado = termo.trim().toLowerCase(); // Padroniza o texto
+    ultimaBuscaAdmin = termo; // Salva a nova palavra na memória global
+
+    // Se a resposta dessa pesquisa já está no cache, usa ela e ACABA a função!
+    if (cacheVagasAdmin[termoTratado]) {
+      setVagas(cacheVagasAdmin[termoTratado]);
+      setLoading(false);
+      return; 
+    }
+
     setLoading(true);
     try {
       let query = supabase.from('vagas_info').select('*').order('id', { ascending: false }).limit(9);
       
-      if (termo) {
-        query = query.ilike('titulo', `%${termo}%`);
+      if (termoTratado) {
+        query = query.ilike('titulo', `%${termoTratado}%`);
       }
 
       const { data, error } = await query;
       if (error) throw error;
+      
+      // Salva o resultado no Dicionário para a próxima vez!
+      cacheVagasAdmin[termoTratado] = data;
       setVagas(data);
     } catch (error) {
       console.error("Erro ao buscar vagas:", error.message);
@@ -47,20 +70,29 @@ const Editar = () => {
 
   const handlePesquisar = (e) => {
     e.preventDefault();
-    buscarVagas(busca.trim());
+    buscarVagas(busca);
   };
 
   const handleIrParaEditar = (vaga) => {
     navigate('/dashboard', { state: { vagaParaEditar: vaga } });
   };
 
+  // 4. Exclusão de Vagas (Limpando os fantasmas do Cache)
   const handleExcluir = async (id, titulo) => {
     if (window.confirm(`Tem certeza que deseja excluir a vaga:\n"${titulo}"?`)) {
       try {
         const { error } = await supabase.from('vagas_info').delete().eq('id', id);
         if (error) throw error;
         
-        setVagas(vagas.filter(v => v.id !== id));
+        // Remove da tela atual
+        const vagasAtualizadas = vagas.filter(v => v.id !== id);
+        setVagas(vagasAtualizadas);
+        
+        // MÁGICA: Entra em todas as gavetas do cache e apaga essa vaga lá de dentro também!
+        Object.keys(cacheVagasAdmin).forEach(termo => {
+          cacheVagasAdmin[termo] = cacheVagasAdmin[termo].filter(v => v.id !== id);
+        });
+
         alert("Vaga excluída com sucesso.");
       } catch (error) {
         console.error("Erro ao excluir:", error.message);
@@ -69,18 +101,11 @@ const Editar = () => {
     }
   };
 
-  // 🌟 NOVA FUNÇÃO: Limpeza Inteligente de Vagas Antigas
   const handleLimparAntigas = async () => {
     const hoje = new Date();
-    
-    // Calcula 15 dias atrás
     const data15DiasAtras = new Date();
     data15DiasAtras.setDate(hoje.getDate() - 15);
-
-    // Calcula o 1º dia do mês atual
     const inicioMesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-
-    // A data de corte é a MENOR entre as duas (Garante que nunca vai apagar do mês atual)
     const dataCorte = data15DiasAtras < inicioMesAtual ? data15DiasAtras : inicioMesAtual;
 
     const dataFormatada = dataCorte.toLocaleDateString('pt-BR');
@@ -93,19 +118,18 @@ const Editar = () => {
 
     try {
       setLoading(true);
-      
-      // Comando mágico: Apaga todas onde a coluna 'dia' é menor que a data de corte
       const { count, error } = await supabase
         .from('vagas_info')
-        .delete({ count: 'exact' }) // Pede pro Supabase contar quantas foram apagadas
+        .delete({ count: 'exact' })
         .lt('dia', dataCorte.toISOString());
 
       if (error) throw error;
 
       alert(`✅ Limpeza concluída! ${count || 0} vagas antigas foram excluídas.`);
       
-      // Recarrega a tela para sumir com os cards apagados
-      buscarVagas();
+      // Se fizemos uma limpeza gigante, o cache não serve mais. Apagamos tudo!
+      cacheVagasAdmin = {}; 
+      buscarVagas(busca); 
       
     } catch (error) {
       console.error("Erro ao limpar vagas antigas:", error.message);
@@ -140,10 +164,8 @@ const Editar = () => {
         </nav>
       </div>
 
-      {/* Título, Botão de Limpeza e Barra de Busca */}
       <div className="w-full max-w-2xl mb-8">
         
-        {/* Cabecalho com o novo botão */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
           <h2 className="text-2xl font-extrabold text-text-main dark:text-white">Gerenciar Vagas</h2>
           
@@ -166,8 +188,10 @@ const Editar = () => {
               type="text" 
               value={busca}
               onChange={(e) => {
-                setBusca(e.target.value);
-                if(e.target.value === '') buscarVagas('');
+                const valor = e.target.value;
+                setBusca(valor);
+                ultimaBuscaAdmin = valor; // Salva o que a pessoa tá digitando na memória
+                if(valor === '') buscarVagas(''); // Se limpar o input, já traz tudo do cache
               }}
               placeholder="Buscar pelo título da vaga..." 
               className="block w-full pl-10 pr-4 py-3 rounded-lg border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-text-main dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm outline-none"
@@ -182,7 +206,6 @@ const Editar = () => {
         </form>
       </div>
 
-      {/* Lista de Vagas */}
       <div className="w-full max-w-2xl space-y-4">
         
         {loading ? (
@@ -211,18 +234,15 @@ const Editar = () => {
                     {(() => {
                       const data = new Date(vaga.dia);
                       const dataFormatada = data.toLocaleDateString('pt-BR');
-                      // padStart(2, '0') garante que "9 horas" fique "09", e "5 minutos" fique "05"
                       const horas = String(data.getHours()).padStart(2, '0');
                       const minutos = String(data.getMinutes()).padStart(2, '0');
                       return `${dataFormatada} - ${horas}h${minutos}m`;
-                      })()}
-                      </span>
+                    })()}
+                  </span>
                 </div>
               </div>
               
-              {/* Botões de Ação */}
               <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 border-t sm:border-t-0 border-border-light dark:border-border-dark pt-4 sm:pt-0">
-                
                 <button 
                   onClick={() => handleIrParaEditar(vaga)}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
@@ -244,7 +264,6 @@ const Editar = () => {
         )}
 
       </div>
-
     </main>
     </>
   );
