@@ -11,6 +11,8 @@ const CriarVaga = () => {
   const [titulo, setTitulo] = useState('');
   const [modelo, setModelo] = useState('Presencial');
   const [link, setLink] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [atividades, setAtividades] = useState('');
   
   // NOVO: Estado que guarda o ID se for uma edição (nulo se for vaga nova)
   const [idEdicao, setIdEdicao] = useState(null);
@@ -34,6 +36,8 @@ const CriarVaga = () => {
       setTitulo(vaga.titulo);
       setLink(vaga.link);
       setIdEdicao(vaga.id); // Guardamos o ID para saber que é um Update!
+      setDescricao(vaga.descricao);
+      setAtividades(vaga.atividades);
 
       // O TRADUTOR DO MODELO DE TRABALHO:
       // Garantimos que a string vai bater perfeitamente com os "values" das <options>
@@ -53,6 +57,8 @@ const CriarVaga = () => {
       setTitulo('');
       setModelo('Presencial');
       setLink('');
+      setDescricao('');
+      setAtividades('');
     }
   }, [navigate, location.state]);
 
@@ -70,7 +76,9 @@ const CriarVaga = () => {
           .update({ 
             titulo: titulo, 
             modelo: modelo, 
-            link: link 
+            link: link,
+            descricao: descricao,
+            atividades: atividades
           })
           .eq('id', idEdicao); // ONDE o id for igual ao que estamos editando
 
@@ -89,7 +97,9 @@ const CriarVaga = () => {
               titulo: titulo, 
               modelo: modelo, 
               link: link,
-              cliques: 0 
+              cliques: 0,
+              descricao: descricao,
+              atividades: atividades 
             }
           ]);
 
@@ -100,6 +110,8 @@ const CriarVaga = () => {
         setTitulo('');
         setModelo('Presencial');
         setLink('');
+        setDescricao('');
+        setAtividades('');
       }
 
       // Esconde a mensagem de sucesso depois de 3 segundos
@@ -171,6 +183,29 @@ const CriarVaga = () => {
               </div>
               <p className="mt-1.5 text-xs text-text-secondary dark:text-gray-500">Seja específico. Títulos como "Dev" são muito genéricos.</p>
             </div>
+            {/* Campo de Descrição */}
+            <div className="w-full mb-4">
+  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Descrição da Vaga</label>
+  <textarea 
+    value={descricao}
+    onChange={(e) => setDescricao(e.target.value)}
+    rows="4"
+    placeholder="Fale um pouco sobre a empresa e o que se espera do estagiário..."
+    className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary outline-none"
+  />
+</div>
+
+{/* Campo de Atividades */}
+<div className="w-full mb-4">
+  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Atividades (Uma por linha)</label>
+  <textarea 
+    value={atividades}
+    onChange={(e) => setAtividades(e.target.value)}
+    rows="4"
+    placeholder="Apoiar nas demandas diárias...&#10;Elaborar relatórios...&#10;Participar de reuniões..."
+    className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary outline-none"
+  />
+</div>
 
             {/* Select do Modelo de Trabalho */}
             <div className="group">

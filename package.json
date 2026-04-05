@@ -4,8 +4,7 @@
   "scripts": {
     "dev:frontend": "cd frontend && npm run dev",
     "dev:backend": "cd backend && npm start",
-    "dev:backend-json": "cd backend && json-server --watch db.json --port 5000",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:backend-json\""
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

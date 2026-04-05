@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { Link } from "react-router-dom";
+
 import gupyLogo from "../../../assets/img/gupy.jpg";
 import indeedLogo from "../../../assets/img/indeed.jpg";
 import linkedinLogo from "../../../assets/img/linkedin.jpg";
@@ -7,6 +9,20 @@ import infojobsLogo from "../../../assets/img/infojobs.jpg";
 import cathoLogo from "../../../assets/img/catho.jpg";
 import solidesLogo from "../../../assets/img/solides.jpg";
 import siteLogo from "../../../assets/img/site.jpg";
+
+// Função ninja para limpar textos (tira acentos, espaços viram traços, tudo minúsculo)
+export const gerarSlug = (texto) => {
+  if (!texto) return 'vaga';
+  return texto
+    .toString()
+    .normalize('NFD') // Separa os acentos das letras
+    .replace(/[\u0300-\u036f]/g, '') // Apaga os acentos
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-') // Troca espaços por -
+    .replace(/[^\w\-]+/g, '') // Remove caracteres especiais (como ! @ #)
+    .replace(/\-\-+/g, '-'); // Se tiver dois traços juntos, vira um só
+};
 
 export default function Card({ 
   id = 1, 
@@ -68,11 +84,11 @@ const registrarClique = () => {
 
   const icone_calculado = (modelo || '').toLowerCase() === 'presencial' ? 'apartment' : 'computer';
 
-  return (
-    <a 
-      href={`${link}`} 
-      target="_blank" 
-      rel="nofollow noopener noreferrer" 
+    return (
+    // ✨ Usamos o Link para não recarregar a página e manter o cache vivo!
+    // ✨ E usamos as variáveis 'titulo' e 'id' diretamente.
+    <Link 
+      to={`/vaga/${gerarSlug(titulo)}/${id}`} 
       className="block h-full"
       onClick={registrarClique} 
     >
@@ -80,11 +96,9 @@ const registrarClique = () => {
         
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-3">
-            {/* 4. Colocamos a variável direto no 'src', sem aspas e sem .jpg! */}
             <img 
               className="size-12 rounded-lg object-cover bg-gray-50" 
               src={logoSrc}
-              // Mantemos o onError por precaução
               onError={(e) => { e.target.src = siteLogo; }} 
             />
             <div>
@@ -126,7 +140,6 @@ const registrarClique = () => {
             <span className="material-symbols-outlined text-[14px]">schedule</span>
             {formatarTempoDecorrido(dia)}
           </span>
-          {/* Notei que você tinha um <a> aqui dentro do Card, que já é um <a>. Mudei para span para não quebrar o HTML! */}
           <span className="text-sm font-bold text-primary hover:text-primary/80 dark:hover:text-teal-400 transition-colors">
             Candidatar-se
           </span>
@@ -134,6 +147,6 @@ const registrarClique = () => {
 
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary transform scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
       </article>
-    </a>
+    </Link>
   );
 }
