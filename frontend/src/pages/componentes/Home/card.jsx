@@ -35,10 +35,21 @@ export default function Card({
 
   // Função que avisa a API que alguém clicou!
 const registrarClique = () => {
+  // 1. Verifica se existe uma sessão de admin ativa no navegador
+  // Lembre-se de trocar 'token' pela palavra exata que você usa no seu login!
+  const isAdminLogado = !!localStorage.getItem('sb-gwocynxaeyeabakxkutk-auth-token'); 
+
+  // 2. O Escudo: Se for o admin, bloqueia o envio
+  if (isAdminLogado) {
+    console.log("🕵️‍♂️ Admin logado: Clique ignorado para não sujar as métricas.");
+    return; // O return expulsa a função daqui, o fetch abaixo não será executado.
+  }
+
+  // 3. Se for um estudante comum, a função continua e envia para o banco
   fetch(`https://estagio-vagas-node.onrender.com/api/vagas/${id}/clique`, {
     method: 'POST',
     headers: {
-      'x-api-key': 'Mdm@estagiohSPx67Qop'
+      'x-api-key': '4aa606997465fd6fc4e825ff8695fcdf'
     }
   }).catch(err => console.error("Erro ao computar clique:", err));
 };
