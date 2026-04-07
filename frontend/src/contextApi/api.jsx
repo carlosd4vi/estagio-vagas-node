@@ -47,7 +47,7 @@ export function Api({ children }) {
 
       // 3. SE NÃO TEM NO CACHE, VAMOS NA API
       const response = await fetch(url, {
-        headers: { 'x-api-key': 'Mdm@estagiohSPx67Qop' }
+        headers: { 'x-api-key': import.meta.env.VITE_API_KEY }
       });
       const data = await response.json();
       

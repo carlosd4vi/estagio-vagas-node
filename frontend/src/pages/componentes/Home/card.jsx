@@ -49,7 +49,7 @@ const registrarClique = () => {
   fetch(`https://estagio-vagas-node.onrender.com/api/vagas/${id}/clique`, {
     method: 'POST',
     headers: {
-      'x-api-key': '4aa606997465fd6fc4e825ff8695fcdf'
+      'x-api-key': import.meta.env.VITE_API_KEY
     }
   }).catch(err => console.error("Erro ao computar clique:", err));
 };
