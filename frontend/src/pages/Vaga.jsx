@@ -157,6 +157,10 @@ useEffect(() => {
 // Exclusivo para o botão relâmpago: Saber se é Indeed ou não (para mudar o texto do botão normal)
   const isIndeed = plataforma.nome === 'Indeed';
 
+  const isDesktop = window.innerWidth >= 768;
+
+  const showBotaoRapido = isIndeed && isDesktop;
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0b1120] text-gray-900 dark:text-gray-100 font-manrope selection:bg-primary/20 selection:text-primary">
       
@@ -279,9 +283,8 @@ useEffect(() => {
                   Plataforma: <strong className="text-gray-900 dark:text-white">{plataforma.nome}</strong>
                 </span>
               </div>
-              {/* O BOTÃO EXCLUSIVO DO INDEED (Só aparece se o site for Indeed) */}
-              {/* O BOTÃO EXCLUSIVO DO INDEED (Só aparece se isIndeed for true) */}
-{isIndeed && (
+              {/* O BOTÃO EXCLUSIVO (Só aparece se for Indeed E se estiver no PC) */}
+{showBotaoRapido && (
   <div className="mb-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 p-4 rounded-2xl">
     <button 
       onClick={() => {
@@ -294,24 +297,19 @@ useEffect(() => {
     </button>
     
     <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-3 px-2 leading-relaxed">
-      ⚡ <strong>Aviso:</strong>Funciona apenas para candidatos que já possuem currículo cadastrado e estão <strong>logados no Indeed</strong>.
+      ⚡ <strong>Aviso:</strong>Funciona apenas para candidatos <strong>logados no Indeed</strong>.
     </p>
   </div>
 )}
 
-{/* O SEU BOTÃO PADRÃO (Aparece para todas as vagas) */}
+{/* O SEU BOTÃO PADRÃO */}
 <button 
   onClick={handleCandidatar}
   className="w-full py-4 bg-primary text-white rounded-xl font-extrabold text-lg shadow-lg shadow-primary/20 hover:bg-primary/90 hover:scale-[1.02] active:scale-95 transition-all duration-300"
 >
-  {/* Muda o texto inteligentemente se for do Indeed */}
-  {isIndeed ? 'Candidatar-se Normalmente' : 'Candidatar-se'}
+  {/* Se estiver mostrando o botão rápido, o texto muda. Se não, fica normal! */}
+  {showBotaoRapido ? 'Candidatar-se Normalmente' : 'Candidatar-se'}
 </button>
-
-<p className="text-center text-xs text-gray-400 mt-4 px-4">
-  Você será redirecionado para o site de inscrição.<br />
-  Boa sorte! 🎉
-</p>
             </div>
           </aside>
 
