@@ -154,6 +154,9 @@ useEffect(() => {
   // Se chegou aqui, temos a vaga! Vamos extrair a logo e o nome:
   const plataforma = identificarPlataforma(vaga.link);
 
+// Exclusivo para o botão relâmpago: Saber se é Indeed ou não (para mudar o texto do botão normal)
+  const isIndeed = plataforma.nome === 'Indeed';
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0b1120] text-gray-900 dark:text-gray-100 font-manrope selection:bg-primary/20 selection:text-primary">
       
@@ -276,19 +279,39 @@ useEffect(() => {
                   Plataforma: <strong className="text-gray-900 dark:text-white">{plataforma.nome}</strong>
                 </span>
               </div>
+              {/* O BOTÃO EXCLUSIVO DO INDEED (Só aparece se o site for Indeed) */}
+              {/* O BOTÃO EXCLUSIVO DO INDEED (Só aparece se isIndeed for true) */}
+{isIndeed && (
+  <div className="mb-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 p-4 rounded-2xl">
+    <button 
+      onClick={() => {
+        window.open(`${vaga.link}&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic`, '_blank');
+      }}
+      className="w-full py-4 bg-[#2557a7] text-white rounded-xl font-extrabold text-lg shadow-lg shadow-blue-500/20 hover:bg-[#1e4687] hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
+    >
+      <span className="material-symbols-outlined text-[24px]">bolt</span>
+      Candidatura Rápida
+    </button>
+    
+    <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-3 px-2 leading-relaxed">
+      ⚡ <strong>Aviso:</strong>Funciona apenas para candidatos que já possuem currículo cadastrado e estão <strong>logados no Indeed</strong>.
+    </p>
+  </div>
+)}
 
-              {/* Botão Oficial de Inscrição */}
-              <button 
-                onClick={handleCandidatar}
-                className="w-full py-4 bg-primary text-white rounded-xl font-extrabold text-lg shadow-lg shadow-primary/20 hover:bg-primary/90 hover:scale-[1.02] active:scale-95 transition-all duration-300"
-              >
-                Candidatar-se
-              </button>
-              
-              <p className="text-center text-xs text-gray-400 mt-4 px-4">
-                Você será redirecionado para o site de inscrição.<br />
-                Boa sorte! 🎉
-              </p>
+{/* O SEU BOTÃO PADRÃO (Aparece para todas as vagas) */}
+<button 
+  onClick={handleCandidatar}
+  className="w-full py-4 bg-primary text-white rounded-xl font-extrabold text-lg shadow-lg shadow-primary/20 hover:bg-primary/90 hover:scale-[1.02] active:scale-95 transition-all duration-300"
+>
+  {/* Muda o texto inteligentemente se for do Indeed */}
+  {isIndeed ? 'Candidatar-se Normalmente' : 'Candidatar-se'}
+</button>
+
+<p className="text-center text-xs text-gray-400 mt-4 px-4">
+  Você será redirecionado para o site de inscrição.<br />
+  Boa sorte! 🎉
+</p>
             </div>
           </aside>
 
