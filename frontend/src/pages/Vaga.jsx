@@ -310,6 +310,10 @@ useEffect(() => {
   {/* Se estiver mostrando o botão rápido, o texto muda. Se não, fica normal! */}
   {showBotaoRapido ? 'Candidatar-se Normalmente' : 'Candidatar-se'}
 </button>
+<p className="text-center text-xs text-gray-400 mt-4 px-4">
+  Você será redirecionado para o site de inscrição.<br />
+  Boa sorte! 🎉
+</p>
             </div>
           </aside>
 
