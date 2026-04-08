@@ -154,12 +154,59 @@ useEffect(() => {
   // Se chegou aqui, temos a vaga! Vamos extrair a logo e o nome:
   const plataforma = identificarPlataforma(vaga.link);
 
+  // A MÁGICA DA GUPY: Descriptografa o Base64 e monta o link direto
+  const gerarLinkRapidoGupy = (linkOriginal) => {
+    try {
+      // 1. Cria um objeto URL inteligente para facilitar a nossa vida
+      const urlObj = new URL(linkOriginal);
+
+      // 2. Verifica se é o formato com "Base64" (caminho /job/)
+      if (!urlObj.pathname.includes('/job/')) {
+        return linkOriginal; // Se for um link comum, não mexe em nada
+      }
+
+      // 3. Pega o nome da empresa ("unimedfortaleza")
+      const empresa = urlObj.hostname.split('.')[0];
+
+      // 4. Pega só a parte do Base64 ("eyJqb2...")
+      const base64String = urlObj.pathname.split('/').pop();
+
+      // 5. Decodifica o Base64 e converte para um objeto de verdade
+      const jsonDecodificado = atob(base64String);
+      const dadosVaga = JSON.parse(jsonDecodificado);
+      
+      // 6. Pega o ID escondido (ex: 11102420)
+      const jobId = dadosVaga.jobId;
+
+      if (!jobId) return linkOriginal;
+
+      // 7. Retorna a URL pronta para a tela de Candidatura!
+      return `https://${empresa}.gupy.io/candidates/jobs/${jobId}/apply?jobBoardSource=gupy_portal`;
+
+    } catch (error) {
+      console.error("Erro ao descriptografar link da Gupy:", error);
+      return linkOriginal; // Caiu aqui? Devolve o link normal como salva-vidas.
+    }
+  };
+
 // Exclusivo para o botão relâmpago: Saber se é Indeed ou não (para mudar o texto do botão normal)
-  const isIndeed = plataforma.nome === 'Indeed';
+// 1. Descobrindo a Plataforma
+const isIndeed = plataforma.nome === 'Indeed';
+const isGupy = plataforma.nome === 'Gupy';
 
-  const isDesktop = window.innerWidth >= 768;
+// 2. Regra da Tela (Lembra do lance do Indeed quebrar no mobile?)
+const isDesktop = window.innerWidth >= 768;
 
-  const showBotaoRapido = isIndeed && isDesktop;
+// 3. O Botão Mágico aparece se for Gupy (qualquer tela) OU Indeed (só no PC)
+const showBotaoRapido = isGupy || (isIndeed && isDesktop);
+
+// 4. Descobrindo qual link rápido usar
+let linkCandidaturaRapida = vaga.link;
+if (isGupy) {
+  linkCandidaturaRapida = gerarLinkRapidoGupy(vaga.link);
+} else if (isIndeed) {
+  linkCandidaturaRapida = `${vaga.link}&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic`;
+}
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0b1120] text-gray-900 dark:text-gray-100 font-manrope selection:bg-primary/20 selection:text-primary">
@@ -284,30 +331,30 @@ useEffect(() => {
                 </span>
               </div>
               {/* O BOTÃO EXCLUSIVO (Só aparece se for Indeed E se estiver no PC) */}
+              {/* O BOTÃO EXCLUSIVO (Gupy ou Indeed (Somente PC) */}
 {showBotaoRapido && (
-  <div className="mb-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 p-4 rounded-2xl">
+  <div className={`mb-4 border p-4 rounded-2xl ${isGupy ? 'bg-blue-50/50 border-blue-200' : 'bg-blue-50 dark:bg-blue-900/10 border-blue-100'}`}>
     <button 
       onClick={() => {
-        window.open(`${vaga.link}&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic`, '_blank');
+        window.open(linkCandidaturaRapida, '_blank');
       }}
-      className="w-full py-4 bg-[#2557a7] text-white rounded-xl font-extrabold text-lg shadow-lg shadow-blue-500/20 hover:bg-[#1e4687] hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
+      className={`w-full py-4 text-white rounded-xl font-extrabold text-lg shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 ${isGupy ? 'bg-[#0070FF] shadow-blue-500/20 hover:bg-[#005AE0]' : 'bg-[#2557a7] shadow-blue-500/20 hover:bg-[#1e4687]'}`}
     >
       <span className="material-symbols-outlined text-[24px]">bolt</span>
       Candidatura Rápida
     </button>
     
     <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-3 px-2 leading-relaxed">
-      ⚡ <strong>Aviso:</strong>Funciona apenas para candidatos <strong>logados no Indeed</strong>.
+      ⚡ <strong>Aviso:</strong>Funciona apenas para candidatos <strong>logados na {plataforma.nome} </strong>.
     </p>
   </div>
 )}
 
-{/* O SEU BOTÃO PADRÃO */}
+{/* O SEU BOTÃO PADRÃO (Para Infojobs, Catho, Sólides, etc) */}
 <button 
   onClick={handleCandidatar}
   className="w-full py-4 bg-primary text-white rounded-xl font-extrabold text-lg shadow-lg shadow-primary/20 hover:bg-primary/90 hover:scale-[1.02] active:scale-95 transition-all duration-300"
 >
-  {/* Se estiver mostrando o botão rápido, o texto muda. Se não, fica normal! */}
   {showBotaoRapido ? 'Candidatar-se Normalmente' : 'Candidatar-se'}
 </button>
 <p className="text-center text-xs text-gray-400 mt-4 px-4">
