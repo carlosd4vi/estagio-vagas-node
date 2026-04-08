@@ -11,7 +11,7 @@ const CriarVaga = () => {
   const [titulo, setTitulo] = useState('');
   const [modelo, setModelo] = useState('Presencial');
   const [link, setLink] = useState('');
-  const [descricao, setDescricao] = useState('');
+  const [requisitos, setRequisitos] = useState('');
   const [atividades, setAtividades] = useState('');
   
   // NOVO: Estado que guarda o ID se for uma edição (nulo se for vaga nova)
@@ -36,7 +36,7 @@ const CriarVaga = () => {
       setTitulo(vaga.titulo);
       setLink(vaga.link);
       setIdEdicao(vaga.id); // Guardamos o ID para saber que é um Update!
-      setDescricao(vaga.descricao);
+      setRequisitos(vaga.requisitos);
       setAtividades(vaga.atividades);
 
       // O TRADUTOR DO MODELO DE TRABALHO:
@@ -57,7 +57,7 @@ const CriarVaga = () => {
       setTitulo('');
       setModelo('Presencial');
       setLink('');
-      setDescricao('');
+      setRequisitos('');
       setAtividades('');
     }
   }, [navigate, location.state]);
@@ -77,7 +77,7 @@ const CriarVaga = () => {
             titulo: titulo, 
             modelo: modelo, 
             link: link,
-            descricao: descricao,
+            requisitos: requisitos,
             atividades: atividades
           })
           .eq('id', idEdicao); // ONDE o id for igual ao que estamos editando
@@ -98,7 +98,7 @@ const CriarVaga = () => {
               modelo: modelo, 
               link: link,
               cliques: 0,
-              descricao: descricao,
+              requisitos: requisitos,
               atividades: atividades 
             }
           ]);
@@ -110,7 +110,7 @@ const CriarVaga = () => {
         setTitulo('');
         setModelo('Presencial');
         setLink('');
-        setDescricao('');
+        setRequisitos('');
         setAtividades('');
       }
 
@@ -185,12 +185,12 @@ const CriarVaga = () => {
             </div>
             {/* Campo de Descrição */}
             <div className="w-full mb-4">
-  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Descrição da Vaga</label>
+  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Requisitos da Vaga</label>
   <textarea 
-    value={descricao}
-    onChange={(e) => setDescricao(e.target.value)}
+    value={requisitos}
+    onChange={(e) => setRequisitos(e.target.value)}
     rows="4"
-    placeholder="Fale um pouco sobre a empresa e o que se espera do estagiário..."
+    placeholder="Fale um pouco sobre os requisitos"
     className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary outline-none"
   />
 </div>

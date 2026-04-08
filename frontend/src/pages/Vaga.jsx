@@ -51,9 +51,9 @@ useEffect(() => {
         setVaga(vagaNoCache); 
         setLoading(false);    
         
-        if (vagaNoCache.descricao !== undefined && vagaNoCache.atividades !== undefined) return; 
+        if (vagaNoCache.requisitos !== undefined && vagaNoCache.atividades !== undefined) return; 
         
-        colunasParaBuscar = 'descricao, atividades';
+        colunasParaBuscar = 'requisitos, atividades';
       } else {
         setLoading(true); 
       }
@@ -189,21 +189,52 @@ useEffect(() => {
     }
   };
 
+  // A MÁGICA DA SÓLIDES: Captura o ID da URL e monta o link direto
+const gerarLinkRapidoSolides = (linkOriginal) => {
+  try {
+    const urlObj = new URL(linkOriginal);
+
+    // Verifica se é um link no formato esperado
+    if (!urlObj.pathname.includes('/vaga/')) {
+      return linkOriginal; 
+    }
+
+    // Fatiando a URL: "/vaga/824636/estagio-dp-" vira um array de palavras
+    const partes = urlObj.pathname.split('/'); 
+    
+    // O ID sempre vai estar na posição logo após a palavra "vaga"
+    const vagaIndex = partes.indexOf('vaga');
+    const id = partes[vagaIndex + 1];
+
+    if (!id) return linkOriginal;
+
+    // Retorna a URL mágica que você descobriu
+    return `https://perfil.vagas.solides.com.br/curriculo?vacancyId=${id}&source=portal&applicationSource=default`;
+
+  } catch (error) {
+    console.error("Erro ao gerar link Sólides:", error);
+    return linkOriginal;
+  }
+};
+
 // Exclusivo para o botão relâmpago: Saber se é Indeed ou não (para mudar o texto do botão normal)
 // 1. Descobrindo a Plataforma
 const isIndeed = plataforma.nome === 'Indeed';
 const isGupy = plataforma.nome === 'Gupy';
+const isSolides = plataforma.nome === 'Sólides';
 
-// 2. Regra da Tela (Lembra do lance do Indeed quebrar no mobile?)
+// 2. Regra da Tela
 const isDesktop = window.innerWidth >= 768;
 
-// 3. O Botão Mágico aparece se for Gupy (qualquer tela) OU Indeed (só no PC)
-const showBotaoRapido = isGupy || (isIndeed && isDesktop);
+// 3. O Botão Mágico aparece: Gupy (todas as telas), Sólides (todas as telas) ou Indeed (só PC)
+const showBotaoRapido = isGupy || isSolides || (isIndeed && isDesktop);
 
 // 4. Descobrindo qual link rápido usar
 let linkCandidaturaRapida = vaga.link;
 if (isGupy) {
   linkCandidaturaRapida = gerarLinkRapidoGupy(vaga.link);
+} else if (isSolides) {
+  linkCandidaturaRapida = gerarLinkRapidoSolides(vaga.link);
 } else if (isIndeed) {
   linkCandidaturaRapida = `${vaga.link}&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic`;
 }
@@ -268,14 +299,29 @@ if (isGupy) {
             {/* SEÇÃO DE TEXTOS (No futuro você pode adicionar a descrição no banco de dados e chamar {vaga.descricao} aqui) */}
             {/* SEÇÃO DE TEXTOS DINÂMICA */}
             <article className="bg-white dark:bg-card-dark rounded-2xl p-8 md:p-12 space-y-10 shadow-sm border border-gray-100 dark:border-gray-800">
-              
-              {/* DESCRIÇÃO DA VAGA */}
-              <section>
-                <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Descrição da Vaga</h2>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg whitespace-pre-wrap">
-                  {vaga.descricao || "A descrição detalhada desta vaga está disponível diretamente na plataforma de inscrição. Clique no botão Candidatar-se para conferir!"}
-                </p>
-              </section>
+
+              <section className="mt-8">
+  <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Requisitos</h2>
+  
+  <ul className="space-y-4">
+    {vaga.requisitos && vaga.requisitos.trim() !== '' ? (
+      vaga.requisitos.split('\n').map((requisito, index) => {
+        if (requisito.trim() === '') return null; // Ignora linhas em branco
+        return (
+          <li key={index} className="flex gap-4">
+            {/* Ícone de ponto com tamanho ideal (14px) para não ficar gigante como o check_circle, mas legível */}
+            <span className="material-symbols-outlined text-primary mt-1 text-[14px]">circle</span>
+            <span className="text-gray-600 dark:text-gray-400">{requisito}</span>
+          </li>
+        );
+      })
+    ) : (
+      <li className="text-gray-600 dark:text-gray-400 italic">
+        Requisitos não especificados. Confira no link oficial.
+      </li>
+    )}
+  </ul>
+</section>
 
               {/* ATIVIDADES (Lendo linha por linha) */}
               <section>
@@ -297,15 +343,6 @@ if (isGupy) {
                     <li className="text-gray-600 dark:text-gray-400 italic">Atividades não especificadas. Confira no link oficial.</li>
                   )}
                 </ul>
-              </section>
-                            <section>
-                <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Requisitos</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl border border-gray-200 dark:border-gray-700">
-                    <p className="text-gray-900 dark:text-white font-semibold mb-1">Formação</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Cursando ensino superior na área ou áreas correlatas.</p>
-                  </div>
-                </div>
               </section>
             </article>
           </div>
@@ -330,33 +367,32 @@ if (isGupy) {
                   Plataforma: <strong className="text-gray-900 dark:text-white">{plataforma.nome}</strong>
                 </span>
               </div>
-              {/* O BOTÃO EXCLUSIVO (Só aparece se for Indeed E se estiver no PC) */}
-              {/* O BOTÃO EXCLUSIVO (Gupy ou Indeed (Somente PC) */}
-{showBotaoRapido && (
-  <div className={`mb-4 border p-4 rounded-2xl ${isGupy ? 'bg-blue-50/50 border-blue-200' : 'bg-blue-50 dark:bg-blue-900/10 border-blue-100'}`}>
+              {showBotaoRapido && (
+  <div className="mb-4 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 p-4 rounded-2xl">
     <button 
       onClick={() => {
         window.open(linkCandidaturaRapida, '_blank');
       }}
-      className={`w-full py-4 text-white rounded-xl font-extrabold text-lg shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 ${isGupy ? 'bg-[#0070FF] shadow-blue-500/20 hover:bg-[#005AE0]' : 'bg-[#2557a7] shadow-blue-500/20 hover:bg-[#1e4687]'}`}
+      className="w-full py-4 text-white rounded-xl font-extrabold text-lg shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 bg-[#0070FF] shadow-blue-500/20 hover:bg-[#005AE0]"
     >
       <span className="material-symbols-outlined text-[24px]">bolt</span>
       Candidatura Rápida
     </button>
     
     <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-3 px-2 leading-relaxed">
-      ⚡ <strong>Aviso:</strong>Funciona apenas para candidatos <strong>logados na {plataforma.nome} </strong>.
+      ⚡ <strong>Aviso:</strong> Funciona apenas para candidatos <strong>logados na {plataforma.nome}</strong>.
     </p>
   </div>
 )}
 
-{/* O SEU BOTÃO PADRÃO (Para Infojobs, Catho, Sólides, etc) */}
+{/* O SEU BOTÃO PADRÃO (Para Infojobs, Catho, etc) */}
 <button 
   onClick={handleCandidatar}
   className="w-full py-4 bg-primary text-white rounded-xl font-extrabold text-lg shadow-lg shadow-primary/20 hover:bg-primary/90 hover:scale-[1.02] active:scale-95 transition-all duration-300"
 >
   {showBotaoRapido ? 'Candidatar-se Normalmente' : 'Candidatar-se'}
 </button>
+
 <p className="text-center text-xs text-gray-400 mt-4 px-4">
   Você será redirecionado para o site de inscrição.<br />
   Boa sorte! 🎉
