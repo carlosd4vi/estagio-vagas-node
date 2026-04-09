@@ -5,34 +5,33 @@ export const ContextApi = createContext();
 export function Api({ children }) {
   const [vagas, setVagas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(false); // ✨ NOVO: Estado para guardar o erro
   
   const [pagina, setPagina] = useState(0);
   const [cliquesBotao, setCliquesBotao] = useState(0);
   const [ordemAtual, setOrdemAtual] = useState('recent');
   const [buscaAtual, setBuscaAtual] = useState(''); 
 
-  // 1. CRIAMOS A GAVETA SECRETA DE CACHE
-  // Ela vai guardar as coisas no formato: { "url_buscada": [array_de_vagas] }
   const cacheVagas = useRef({});
 
   const buscarVagas = async (ordem = ordemAtual, resetar = true, termoBusca = buscaAtual) => {
     if (resetar) {
       setLoading(true);
+      setErro(false); // ✨ NOVO: Limpa o erro sempre que for tentar buscar de novo
       setPagina(0); 
       setCliquesBotao(0); 
       setOrdemAtual(ordem);
       setBuscaAtual(termoBusca);
     }
+    
     try {
       const paginaParaBuscar = resetar ? 0 : pagina + 1;
       const url = `https://estagio-vagas-node.onrender.com/api/vagas?ordem=${ordem}&page=${paginaParaBuscar}&busca=${encodeURIComponent(termoBusca)}`;
       
-      // 2. O GUARDA DE TRÂNSITO DO CACHE
       if (cacheVagas.current[url]) {
         if (resetar) {
           setVagas(cacheVagas.current[url]);
         } else {
-          // ✨ FILTRO ANTI-DUPLICATAS NO CACHE
           setVagas((vagasAntigas) => {
             const novas = cacheVagas.current[url].filter(vNova => 
               !vagasAntigas.some(vAntiga => vAntiga.id === vNova.id)
@@ -45,19 +44,22 @@ export function Api({ children }) {
         return; 
       }
 
-      // 3. SE NÃO TEM NO CACHE, VAMOS NA API
       const response = await fetch(url, {
         headers: { 'x-api-key': import.meta.env.VITE_API_KEY }
       });
+
+      // Se a resposta da API não for 200 OK, forçamos um erro para cair no catch
+      if (!response.ok) {
+        throw new Error("Falha na requisição da API");
+      }
+
       const data = await response.json();
       
-      // 4. SALVAMOS O RESULTADO NA GAVETA
       cacheVagas.current[url] = data;
       
       if (resetar) {
         setVagas(data);
       } else {
-        // ✨ FILTRO ANTI-DUPLICATAS NA API
         setVagas((vagasAntigas) => {
           const novas = data.filter(vNova => 
             !vagasAntigas.some(vAntiga => vAntiga.id === vNova.id)
@@ -68,6 +70,7 @@ export function Api({ children }) {
       }
     } catch (error) {
       console.error("Erro ao buscar vagas:", error);
+      setErro(true); // ✨ NOVO: Se o código quebrar, avisa a tela que deu erro!
     } finally {
       if (resetar) setLoading(false);
     }
@@ -85,7 +88,8 @@ export function Api({ children }) {
   }, []); 
 
   return (
-    <ContextApi.Provider value={{ vagas, loading, buscarVagas, carregarMaisVagas, cliquesBotao, ordemAtual }}>
+    // ✨ NOVO: Exportamos a variável "erro" no value do Provider para o Home poder usar
+    <ContextApi.Provider value={{ vagas, loading, erro, buscarVagas, carregarMaisVagas, cliquesBotao, ordemAtual }}>
       {children}
     </ContextApi.Provider>
   );
