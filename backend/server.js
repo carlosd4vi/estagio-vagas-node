@@ -151,6 +151,6 @@ app.post('/api/vagas/:id/clique', verificarApiKey, limitadorCliques, async (req,
   }
 });
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 API blindada rodando na porta ${port}`);
 });

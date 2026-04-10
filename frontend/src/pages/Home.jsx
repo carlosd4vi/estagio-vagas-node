@@ -51,7 +51,7 @@ const Home = () => {
     </h2>
     
     <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto leading-relaxed">
-      Não foi possível carregar as vagas no momento. Tente novamente.
+      Não foi possível carregar as vagas no momento. Tente mais tarde.
     </p>
     
     <button 
