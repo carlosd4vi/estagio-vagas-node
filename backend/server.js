@@ -7,6 +7,8 @@ const rateLimit = require('express-rate-limit'); // IMPORT NOVO
 const app = express();
 const port = 3000;
 
+app.set('trust proxy', 1);
+
 app.use(express.json());
 
 // 🛡️ MURALHA 1: CORS (Bloqueia sites de terceiros)
