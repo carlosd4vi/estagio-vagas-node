@@ -3,26 +3,38 @@ import React, { createContext, useState, useEffect, useRef } from 'react';
 export const ContextApi = createContext();
 
 export function Api({ children }) {
+
+ // Guardamos as vagas, o estado de loading, e o estado de erro
+
   const [vagas, setVagas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState(false); // ✨ NOVO: Estado para guardar o erro
+  const [erro, setErro] = useState(false);
+
+  // Guardamos a página atual, quantos cliques no botão "Carregar Mais" já tivemos, 
+  // a ordem atual e o termo de busca atual
   
   const [pagina, setPagina] = useState(0);
   const [cliquesBotao, setCliquesBotao] = useState(0);
   const [ordemAtual, setOrdemAtual] = useState('recent');
-  const [buscaAtual, setBuscaAtual] = useState(''); 
+  const [buscaAtual, setBuscaAtual] = useState('');
+  
+  // Criamos um cache para as vagas, usando useRef para manter o mesmo objeto entre renders
 
   const cacheVagas = useRef({});
+
+  // Função para buscar vagas, que aceita parâmetros para ordem, se deve resetar a lista, e o termo de busca
 
   const buscarVagas = async (ordem = ordemAtual, resetar = true, termoBusca = buscaAtual) => {
     if (resetar) {
       setLoading(true);
-      setErro(false); // ✨ NOVO: Limpa o erro sempre que for tentar buscar de novo
+      setErro(false);
       setPagina(0); 
       setCliquesBotao(0); 
       setOrdemAtual(ordem);
       setBuscaAtual(termoBusca);
     }
+
+    // Construímos a URL da API com os parâmetros de ordem, página e busca, e verificamos se já temos os dados no cache
     
     try {
       const paginaParaBuscar = resetar ? 0 : pagina + 1;
@@ -56,6 +68,9 @@ export function Api({ children }) {
       const data = await response.json();
       
       cacheVagas.current[url] = data;
+
+      // Se resetar, substituímos as vagas; se não, 
+      // adicionamos as novas vagas à lista existente, garantindo que não haja duplicatas
       
       if (resetar) {
         setVagas(data);
@@ -70,7 +85,7 @@ export function Api({ children }) {
       }
     } catch (error) {
       console.error("Erro ao buscar vagas:", error);
-      setErro(true); // ✨ NOVO: Se o código quebrar, avisa a tela que deu erro!
+      setErro(true);
     } finally {
       if (resetar) setLoading(false);
     }
@@ -88,7 +103,6 @@ export function Api({ children }) {
   }, []); 
 
   return (
-    // ✨ NOVO: Exportamos a variável "erro" no value do Provider para o Home poder usar
     <ContextApi.Provider value={{ vagas, loading, erro, buscarVagas, carregarMaisVagas, cliquesBotao, ordemAtual }}>
       {children}
     </ContextApi.Provider>

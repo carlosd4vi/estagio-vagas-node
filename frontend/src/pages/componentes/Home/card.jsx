@@ -1,6 +1,5 @@
 import React from 'react';
-
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // ✨ Adicionamos o useNavigate
 
 import gupyLogo from "../../../assets/img/gupy.jpg";
 import indeedLogo from "../../../assets/img/indeed.jpg";
@@ -10,18 +9,17 @@ import cathoLogo from "../../../assets/img/catho.jpg";
 import solidesLogo from "../../../assets/img/solides.jpg";
 import siteLogo from "../../../assets/img/site.jpg";
 
-// Função ninja para limpar textos (tira acentos, espaços viram traços, tudo minúsculo)
 export const gerarSlug = (texto) => {
   if (!texto) return 'vaga';
   return texto
     .toString()
-    .normalize('NFD') // Separa os acentos das letras
-    .replace(/[\u0300-\u036f]/g, '') // Apaga os acentos
+    .normalize('NFD') 
+    .replace(/[\u0300-\u036f]/g, '') 
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, '-') // Troca espaços por -
-    .replace(/[^\w\-]+/g, '') // Remove caracteres especiais (como ! @ #)
-    .replace(/\-\-+/g, '-'); // Se tiver dois traços juntos, vira um só
+    .replace(/\s+/g, '-') 
+    .replace(/[^\w\-]+/g, '') 
+    .replace(/\-\-+/g, '-'); 
 };
 
 export default function Card({ 
@@ -30,31 +28,46 @@ export default function Card({
   link = 'https://google.com',
   modelo = 'Presencial', 
   cliques = 0, 
-  dia = 'Hoje' 
+  dia = 'Hoje',
+  // ✨ NOVAS PROPS DO AGRUPADOR ✨
+  similares = [],
+  abrirModal = () => {}
 }) {
 
-  // Função que avisa a API que alguém clicou!
-const registrarClique = () => {
-  // 1. Verifica se existe uma sessão de admin ativa no navegador
-  // Lembre-se de trocar 'token' pela palavra exata que você usa no seu login!
-  const isAdminLogado = !!localStorage.getItem('sb-gwocynxaeyeabakxkutk-auth-token'); 
+  const navigate = useNavigate(); // Ferramenta do React Router para navegar via código
 
-  // 2. O Escudo: Se for o admin, bloqueia o envio
-  if (isAdminLogado) {
-    console.log("🕵️‍♂️ Admin logado: Clique ignorado para não sujar as métricas.");
-    return; // O return expulsa a função daqui, o fetch abaixo não será executado.
-  }
+  const registrarClique = () => {
+    const isAdminLogado = !!localStorage.getItem('sb-gwocynxaeyeabakxkutk-auth-token'); 
 
-  // 3. Se for um estudante comum, a função continua e envia para o banco
-  fetch(`https://estagio-vagas-node.onrender.com/api/vagas/${id}/clique`, {
-    method: 'POST',
-    headers: {
-      'x-api-key': import.meta.env.VITE_API_KEY
+    if (isAdminLogado) {
+      console.log("🕵️‍♂️ Admin logado: Clique ignorado para não sujar as métricas.");
+      return; 
     }
-  }).catch(err => console.error("Erro ao computar clique:", err));
-};
 
-  // Função que Converte a Data
+    fetch(`https://estagio-vagas-node.onrender.com/api/vagas/${id}/clique`, {
+      method: 'POST',
+      headers: {
+        'x-api-key': import.meta.env.VITE_API_KEY
+      }
+    }).catch(err => console.error("Erro ao computar clique:", err));
+  };
+
+  // ✨ A NOVA INTELIGÊNCIA DO CLIQUE ✨
+  const lidarComCliqueDoCard = (e) => {
+    e.preventDefault(); // Impede o <Link> de fazer a ação padrão dele
+    
+    // Sempre registra o clique nas métricas
+    registrarClique();
+
+    // Se a vaga for "Pai" e tiver filhas, abre o Modal!
+    if (similares && similares.length > 0) {
+      abrirModal();
+    } else {
+      // Se for uma vaga normal (sem repetições), navega para a página da vaga!
+      navigate(`/vaga/${gerarSlug(titulo)}/${id}`);
+    }
+  };
+
   function formatarTempoDecorrido(dataBanco) {
     const dataVaga = new Date(dataBanco);
     const dataAtual = new Date();
@@ -74,7 +87,6 @@ const registrarClique = () => {
     return dataVaga.toLocaleDateString('pt-BR');
   }
 
-  // 2. A MÁGICA: A função agora retorna a própria VARIÁVEL da imagem importada
   const identificarPlataformaImg = (linkVaga) => {
     if (!linkVaga) return siteLogo;
     
@@ -90,18 +102,15 @@ const registrarClique = () => {
     return siteLogo;
   };
 
-  // 3. Pegamos a variável da imagem correta
   const logoSrc = identificarPlataformaImg(link);
-
   const icone_calculado = (modelo || '').toLowerCase() === 'presencial' ? 'apartment' : 'computer';
 
-    return (
-    // ✨ Usamos o Link para não recarregar a página e manter o cache vivo!
-    // ✨ E usamos as variáveis 'titulo' e 'id' diretamente.
-    <Link 
-      to={`/vaga/${gerarSlug(titulo)}/${id}`} 
-      className="block h-full"
-      onClick={registrarClique} 
+  return (
+    // Mudamos para <a> com onClick para assumirmos o controle total do redirecionamento
+    <a 
+      href={`/vaga/${gerarSlug(titulo)}/${id}`} 
+      className="block h-full cursor-pointer"
+      onClick={lidarComCliqueDoCard} 
     >
       <article className="bg-card-light dark:bg-card-dark p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all group flex flex-col h-full relative overflow-hidden">
         
@@ -126,10 +135,19 @@ const registrarClique = () => {
             Fortaleza, CE
           </span>
 
+          {/* O Seu selo de Modelo */}
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-green-50 dark:bg-green-900/30 text-xs font-medium text-green-600 dark:text-green-300">
             <span className="material-symbols-outlined text-[14px]">{icone_calculado}</span>
             {modelo}
           </span>
+
+          {/* ✨ A NOVA TAG AMARELA (Total de Vagas) ✨ */}
+          {similares && similares.length > 0 && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs font-bold border border-yellow-200 dark:border-yellow-800/50">
+              <span className="material-symbols-outlined text-[14px]">layers</span>
+              {similares.length + 1} Vagas
+            </span>
+          )}
 
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-600 dark:text-gray-300">
             <span className="material-symbols-outlined text-[14px]">work</span>
@@ -152,12 +170,12 @@ const registrarClique = () => {
             {formatarTempoDecorrido(dia)}
           </span>
           <span className="text-sm font-bold text-primary hover:text-primary/80 dark:hover:text-teal-400 transition-colors">
-            Candidatar-se
+            {similares && similares.length > 0 ? 'Ver Opções' : 'Candidatar-se'}
           </span>
         </div>
 
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary transform scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
       </article>
-    </Link>
+    </a>
   );
 }
