@@ -110,6 +110,20 @@ const formatarTempoDecorrido = (dataBanco) => {
     }
   }, [vagasProcessadas]);
 
+  // ✨ NOVA FUNÇÃO: Dispara o clique quando o usuário clica em "Ver Vaga" dentro do modal
+  const registrarCliqueModal = (idVagaModal) => {
+    // Mesma verificação ninja para não contar os cliques do Admin!
+    const isAdminLogado = !!localStorage.getItem('sb-gwocynxaeyeabakxkutk-auth-token'); 
+    if (isAdminLogado) return;
+
+    fetch(`https://estagio-vagas-node.onrender.com/api/vagas/${idVagaModal}/clique`, {
+      method: 'POST',
+      headers: {
+        'x-api-key': import.meta.env.VITE_API_KEY
+      }
+    }).catch(err => console.error("Erro ao computar clique no modal:", err));
+  };
+
   const abrirModalSimilares = (vagaPrincipal) => {
     setTituloModal(vagaPrincipal.titulo);
     setVagasDoModal([vagaPrincipal, ...vagaPrincipal.similares]); 
@@ -240,8 +254,10 @@ const formatarTempoDecorrido = (dataBanco) => {
     </div>
   </div>
   
+  {/* A tag Link agora chama a função passando o ID da vaga específica! */}
   <Link 
     to={`/vaga/${gerarSlug(v.titulo)}/${v.id}`} 
+    onClick={() => registrarCliqueModal(v.id)} // ✨ A MÁGICA ENTRA AQUI ✨
     className="bg-primary/10 text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors text-center whitespace-nowrap self-start sm:self-center ml-2"
   >
     Ver Vaga
