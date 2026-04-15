@@ -172,29 +172,36 @@ const formatarTempoDecorrido = (dataBanco) => {
           </div>
         ) : (
           <div id="jobs-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {vagasProcessadas.map((vaga, index) => (
-              <React.Fragment key={vaga.id}>
-                <Card 
-                  id={vaga.id}
-                  nome_site={vaga.nome_site}
-                  titulo={vaga.titulo}
-                  modelo={vaga.modelo}
-                  link={vaga.link}
-                  icone_modelo={vaga.icone_modelo}
-                  cliques={vaga.cliques}
-                  dia={vaga.dia} 
-                  similares={vaga.similares} 
-                  abrirModal={() => abrirModalSimilares(vaga)}
-                  slug={gerarSlug(vaga.titulo)}
-                />
+            {vagasProcessadas.map((vaga, index) => {
+              
+              // ✨ MATEMÁTICA DOS CLIQUES: Soma os cliques da vaga principal com as filhas ✨
+              const cliquesFilhas = vaga.similares ? vaga.similares.reduce((soma, filha) => soma + (filha.cliques || 0), 0) : 0;
+              const totalCliques = (vaga.cliques || 0) + cliquesFilhas;
 
-                {(index + 1) % 6 === 0 && index !== vagasProcessadas.length - 1 && (
-                  <div className="col-span-full w-full h-24 bg-gray-100/80 dark:bg-[#111827]/50 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl flex flex-col items-center justify-center overflow-hidden opacity-70 hover:opacity-100 transition-opacity">
-                    <Ad />
-                  </div>
-                )}
-              </React.Fragment>
-            ))}
+              return (
+                <React.Fragment key={vaga.id}>
+                  <Card 
+                    id={vaga.id}
+                    nome_site={vaga.nome_site}
+                    titulo={vaga.titulo}
+                    modelo={vaga.modelo}
+                    link={vaga.link}
+                    icone_modelo={vaga.icone_modelo}
+                    cliques={totalCliques} // 🔥 AQUI ENTRA A VARIÁVEL DA SOMA 🔥
+                    dia={vaga.dia} 
+                    similares={vaga.similares} 
+                    abrirModal={() => abrirModalSimilares(vaga)}
+                    slug={gerarSlug(vaga.titulo)}
+                  />
+
+                  {(index + 1) % 6 === 0 && index !== vagasProcessadas.length - 1 && (
+                    <div className="col-span-full w-full h-24 bg-gray-100/80 dark:bg-[#111827]/50 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl flex flex-col items-center justify-center overflow-hidden opacity-70 hover:opacity-100 transition-opacity">
+                      <Ad />
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
         )}
 
