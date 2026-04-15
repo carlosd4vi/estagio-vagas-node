@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
-const rateLimit = require('express-rate-limit'); // IMPORT NOVO
+const rateLimit = require('express-rate-limit'); 
 
 const app = express();
 const port = 3000;
@@ -13,13 +13,12 @@ app.use(express.json());
 
 // 🛡️ MURALHA 1: CORS (Bloqueia sites de terceiros)
 const dominiosPermitidos = [
-  'http://localhost:5173', // Seu React local
-  'https://estagiofortaleza.vercel.app' // Coloque o link do seu site hospedado aqui depois!
+  'http://localhost:5173', 
+  'https://estagiofortaleza.vercel.app' 
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Permite se vier de um domínio aprovado ou se não tiver origem (ex: chamadas internas do servidor)
     if (!origin || dominiosPermitidos.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -30,33 +29,30 @@ app.use(cors({
 
 // 🛡️ MURALHA 2: RATE LIMIT (Evita ataques de spam/robôs)
 const limitadorGeral = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // Limita a 100 requisições por IP
+  windowMs: 15 * 60 * 1000, 
+  max: 100, 
   message: { erro: 'Você fez requisições demais.' }
 });
 
 const limitadorCliques = rateLimit({
-  windowMs: 60 * 1000, // 1 minuto
-  max: 10, // Limita a 5 cliques por minuto por IP
+  windowMs: 60 * 1000, 
+  max: 10, 
   message: { erro: 'Muitos cliques.' }
 });
 
-// Rota Raiz: Apenas para dar "Oi" para o UptimeRobot e curiosos
 app.get('/', (req, res) => {
   res.status(200).send('API do Estágio Fortaleza operando 100%! 🚀');
 });
 
-// Aplica o limitador geral em todas as rotas que começam com /api
 app.use('/api', limitadorGeral);
 
-// 🛡️ MURALHA 3: API KEY (Exige uma senha secreta para acessar os dados)
+// 🛡️ MURALHA 3: API KEY
 const verificarApiKey = (req, res, next) => {
   const chaveRecebida = req.headers['x-api-key'];
-  // Pegamos a chave do .env, ou usamos uma padrão se esquecer de colocar
   const minhaChaveSecreta = process.env.API_SECRET_KEY;
 
   if (chaveRecebida === minhaChaveSecreta) {
-    next(); // Senha correta, pode passar!
+    next(); 
   } else {
     return res.status(401).json({ erro: 'Acesso não autorizado.' });
   }
@@ -69,9 +65,8 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 // ROTAS DA API
 // ==========================================
 
-// LOGIN - ⚠️ CORREÇÃO SÊNIOR: Mudei de GET para POST!
+// LOGIN
 app.post('/api/login', verificarApiKey, async (req, res) => {
-  // Pegamos do req.body (seguro), e não do req.query (inseguro)
   const { email, password } = req.body;
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -102,7 +97,7 @@ app.get('/api/vagas', verificarApiKey, async (req, res) => {
     }
 
     if (ordem === 'most_viewed') {
-      // Adicionamos um SEGUNDO .order() com o 'id' para ser o critério de desempate!
+      // Ordenação ranqueada por cliques
       query = query
         .order('cliques', { ascending: false, nullsFirst: false })
         .order('id', { ascending: false });
@@ -122,7 +117,7 @@ app.get('/api/vagas', verificarApiKey, async (req, res) => {
 });
 
 
-// Rota para registrar um novo clique na vaga - Protegida com Rate Limit Extra e API Key
+// Rota para registrar um novo clique na vaga
 app.post('/api/vagas/:id/clique', verificarApiKey, limitadorCliques, async (req, res) => {
   try {
     const vagaId = req.params.id;
