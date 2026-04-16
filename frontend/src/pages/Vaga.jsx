@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { supabase } from '../script/supabase'; // Ajuste o caminho do seu supabase se precisar!
 import { ContextApi } from '../contextApi/api';
 
@@ -241,6 +242,14 @@ if (isGupy) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0b1120] text-gray-900 dark:text-gray-100 font-manrope selection:bg-primary/20 selection:text-primary">
+
+      {/* ✨ MAGIA DO SEO DINÂMICO ✨ */}
+      {vaga && (
+        <Helmet>
+          <title>{vaga.titulo} | Estágio Fortaleza</title>
+          <meta name="description" content={`Vaga para ${vaga.titulo} no modelo ${vaga.modelo}. Inscreva-se agora no Estágio Fortaleza!`} />
+        </Helmet>
+      )}
       
       <Header />
 

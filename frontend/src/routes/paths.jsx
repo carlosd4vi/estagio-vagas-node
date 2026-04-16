@@ -1,4 +1,5 @@
 import React, { Suspense, lazy } from 'react';
+import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Api } from "../contextApi/api"
 
@@ -17,6 +18,7 @@ const Contato = lazy(() => import("../pages/rodape/Contato"));
 
 const Paths = () => {
     return (
+        <HelmetProvider>
         <Api>
             <BrowserRouter>
                 {/* 3. O Suspense segura a barra enquanto o arquivo JS pesado está baixando */}
@@ -40,6 +42,7 @@ const Paths = () => {
                 </Suspense>
             </BrowserRouter>
         </Api>
+        </HelmetProvider>
     );
 }
 
