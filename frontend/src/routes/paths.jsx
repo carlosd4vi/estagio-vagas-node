@@ -6,9 +6,9 @@ import { Api } from "../contextApi/api"
 // 1. Importações Normais (Carregam rápido no início)
 import Home from "../pages/Home"
 import Vaga from "../pages/Vaga"
-import Login from "../pages/Login"
 
 // 2. Importações Preguiçosas (Só baixam quando o usuário entra na URL)
+const Login = lazy(()=> import("../pages/Login"));
 const Dashboard = lazy(() => import("../pages/Dashboard"));
 const DashboardEdit = lazy(() => import("../pages/Dashboard-Edit"));
 const PoliticaPrivacidade = lazy(() => import("../pages/rodape/PoliticaPrivacidade"));

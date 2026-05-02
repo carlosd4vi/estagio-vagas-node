@@ -128,7 +128,7 @@ const Home = () => {
     const isAdminLogado = !!localStorage.getItem('sb-gwocynxaeyeabakxkutk-auth-token'); 
     if (isAdminLogado) return;
 
-    fetch(`https://estagio-vagas-node.onrender.com/api/vagas/${idVagaModal}/clique`, {
+    fetch(`${import.meta.env.VITE_URL_API}/api/vagas/${idVagaModal}/clique`, {
       method: 'POST',
       headers: {
         'x-api-key': import.meta.env.VITE_API_KEY

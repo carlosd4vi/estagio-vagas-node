@@ -38,7 +38,7 @@ export function Api({ children }) {
     
     try {
       const paginaParaBuscar = resetar ? 0 : pagina + 1;
-      const url = `https://estagio-vagas-node.onrender.com/api/vagas?ordem=${ordem}&page=${paginaParaBuscar}&busca=${encodeURIComponent(termoBusca)}`;
+      const url = `${import.meta.env.VITE_URL_API}/api/vagas?ordem=${ordem}&page=${paginaParaBuscar}&busca=${encodeURIComponent(termoBusca)}`;
       
       if (cacheVagas.current[url]) {
         if (resetar) {
@@ -99,8 +99,18 @@ export function Api({ children }) {
   };
 
   useEffect(() => {
-    buscarVagas();
-  }, []); 
+    const urlAtual = window.location.pathname;
+
+    // ✨ AGORA SIM! 100% BLINDADO ✨
+    // Só bloqueia se a URL realmente começar com /login ou /dashboard
+    if (urlAtual.startsWith('/login') || urlAtual.startsWith('/dashboard')) {
+      return; 
+    }
+
+    // Segue o fluxo normal e busca as vagas pro estudante ver:
+    buscarVagas(); 
+    
+  }, [ordemAtual, cliquesBotao]);
 
   return (
     <ContextApi.Provider value={{ vagas, loading, erro, buscarVagas, carregarMaisVagas, cliquesBotao, ordemAtual }}>
